@@ -6,6 +6,14 @@ Multi-layered Morphological Analysis (MLMA) 記法の語構成要素アノテー
 
 1. [MLMA extractor](mlma-extractor.pl)
 
+## 実行
+
+```
+perl mlma-extractor.pl <FILE>
+'''
+
+FILE には MLMA 記法で語構成が記述してあるとする．
+
 # MLMA 記法
 
 境界記号の優先順位を <...>, [...], {...}, (...) と定めた上であれば，多重構造アノテーションのアルゴリズムは次の通り:
