@@ -11,6 +11,7 @@
 # 3) added handling of comment lines starting with # or %
 # 4) added options for mode selection among A, B, C and D
 # on 2022/12/20; fixed a bug on @pool handling
+# on 2023/01/12; added handling of inline comment
 #
 # This Perl script takes a file and performes dual-mode parsing linewise where
 # each line is parsed for components between group opener and closer.
@@ -77,8 +78,10 @@ while ( my $line = <>) {
 		printf "## raw input $count: $line\n" ;
 		printf "## length: %s\n", length($line) ;
 		}
-	#
-	$line =~ s/ +//g ; # removes whitespaces inside
+	# remove inline comments
+	$line =~ s/([^#]+)#.*/$1/ ;
+	# removes whitespaces inside
+	$line =~ s/ +//g ;
 	printf "## input $count: $line\n" ;
 	## count parentheses
 	my (@A1, @A2, @B1, @B2, @C1, @C2, @D1, @D2) ; # holds the indices for grouping
