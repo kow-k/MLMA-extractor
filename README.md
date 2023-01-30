@@ -8,7 +8,12 @@ Multi-layered Morphological Analysis (MLMA) 記法の語構成要素アノテー
 
 ## 実行
 
-`perl mlma-extractor.pl <FILE>`
+`./mlma-extractor.pl [options] <FILE>`
+
+か
+
+`perl mlma-extractor.pl [options] <FILE>`
+
 
 重要なオプション -r(egularize) と -g(entle)
 
