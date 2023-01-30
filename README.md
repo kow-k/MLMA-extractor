@@ -43,4 +43,33 @@ Step 4:
 - <[[ 十二指 [ 腸 ]][空 [ 腸 ]]]< 吻合 >>
 - <[{( 冠状 ) <[{ 動 <[ 脈 }}< 硬化 ]]]< 症 >>>>>>
 
-# A~B~C の表記を使って，AC を不連続要素として認識可能．ただし実装は quick and dirty なので，不自然な出力が得られる可能性大．-regularize|r で ~を無視するモードで実行．
+2. [MLMA 記法の見本](list2-sample-medterms-mlms.txt)
+
+
+## -regularize の効果
+
+A~B~C の表記を使って，AC を不連続要素として認識可能．ただし実装は quick and dirty なので，不自然な出力が得られる可能性大．-regularize|r で入力中の ~ を無視する．
+
+## -gentle の効果
+
+-gentle は下位分割を抑制する．
+
+<[集中<治療]<室>>> の default = -g なし解析結果:
+
+```
+## summary:
+item 11 has component  1: 室
+item 11 has component  2: 治療
+item 11 has component  3: 治療室
+item 11 has component  4: 集中
+item 11 has component  5: 集中治療室
+```
+
+<[集中<治療]<室>>> の -g あり解析結果:
+
+```
+## summary:
+item n has component  1: 室
+item n has component  2: 治療室
+item n has component  3: 集中治療室
+```
