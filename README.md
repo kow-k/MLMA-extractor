@@ -49,7 +49,7 @@ Step 4:
 
 ## -regularize の効果
 
-A ~ B ~ C の表記を使って，AC を不連続要素として認識可能．ただし実装は quick and dirty なので，不自然な出力が得られる可能性大．-r(egularize) で入力中の ~ を無視する．
+デフォールトでは A ~ B ~ C の表記を使って，AC を不連続要素として認識するが，実装は quick and dirty なので，不自然な出力が得られる可能性大．-r(egularize) で入力中の ~ を無視した処理が可能．
 
 ## -gentle の効果
 
