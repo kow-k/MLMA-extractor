@@ -8,9 +8,12 @@ Multi-layered Morphological Analysis (MLMA) 記法の語構成要素アノテー
 
 ## 実行
 
-```
-perl mlma-extractor.pl <FILE>
-'''
+`perl mlma-extractor.pl <FILE>`
+
+重要なオプション -r(egularize) と -g(entle)
+
+-r(egularize) は不連続要素の認識を無効化 [後述]
+-g(entle) は細分化を抑制 [後述]
 
 FILE には MLMA 記法で語構成が記述してあるとする．
 
@@ -39,3 +42,5 @@ Step 4:
 - <[ 乳汁 < 分泌 ]< 抑制 >>>
 - <[[ 十二指 [ 腸 ]][空 [ 腸 ]]]< 吻合 >>
 - <[{( 冠状 ) <[{ 動 <[ 脈 }}< 硬化 ]]]< 症 >>>>>>
+
+# A~B~C の表記を使って，AC を不連続要素として認識可能．ただし実装は quick and dirty なので，不自然な出力が得られる可能性大．-regularize|r で ~を無視するモードで実行．
