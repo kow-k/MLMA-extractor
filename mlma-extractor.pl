@@ -42,7 +42,6 @@ GetOptions(\%args,
    "help|h",         #print help
    "debug",          #debug options
    "verbose|v",      #verbose option
-   "summarize|s",    #summarization option
    "gentle|g",       #runs in gentle mode
    "regularize|r",   #regularize input by ignoring dicontinuity marking
    "onlyA|A",        #select A grouping only
@@ -87,7 +86,7 @@ while ( my $input = <> ) {
    # regularize input by removing dicontinuity marking
    if ( $args{regularize} ) {
       $input =~ s/\Q$linker\E//g ;
-   } 
+   }
    printf "## input $count: $input\n" ;
    ##
    our @pool = ( ) ;
