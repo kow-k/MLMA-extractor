@@ -4,16 +4,17 @@
 # contact: kow.kuroda@gmail.com
 # created on 2022/12/11
 # modifications:
-# on 2022/12/12; code refactored by elaborating generates(...) to work.
-# on 2022/12/13;
+# 2022/12/12; code refactored by elaborating generates(...) to work.
+# 2022/12/13;
 # 1) modified generate(...) to handle recursion properly;
 # 2) extended to process grouping using { and }, and ( and ).
 # 3) added handling of comment lines starting with # or %
 # 4) added options for mode selection among A, B, C and D
-# on 2022/12/20; fixed a bug on @pool handling
-# on 2023/01/12; added handling of inline comment
-# on 2023/01/16; change greedy to default behavior, adding switch by gentle;
-# on 2023/01/18; implemented discontinuity marked by ~ in which A~B~C yields AC as well
+# 2022/12/20; fixed a bug on @pool handling
+# 2023/01/12; added handling of inline comment
+# 2023/01/16; change greedy to default behavior, adding switch by gentle;
+# 2023/01/18; implemented discontinuity marked by ~ in which A~B~C yields AC as well
+# 2023/02/07; fixed a bug in @A1, @A2, ... that resulted in overcounting
 #
 # This Perl script takes a file and performes dual-mode parsing linewise where
 # each line is parsed for components between group opener and closer.
@@ -90,6 +91,8 @@ while ( my $input = <> ) {
    printf "## input $count: $input\n" ;
    ##
    our @pool = ( ) ;
+   ## holds the indices for grouping
+   our (@A1, @A2, @B1, @B2, @C1, @C2, @D1, @D2) ;
    ## process linkers
    my $nchar =  length ($input) ;
    my $nlinks = $nchar - length( $input =~ s/\Q$linker\E//rg );
@@ -123,6 +126,8 @@ while ( my $input = <> ) {
    }
    ##
    printf $itembreak ;
+   ## re-initialize the arrays
+   (@A1, @A2, @B1, @B2, @C1, @C2, @D1, @D2) = ((), (), (), (), (), (), (), ()) ;
 }
 
 #
@@ -236,60 +241,61 @@ sub expand {
 sub process {
    my $line = shift() ;
    ## count parentheses
-   our (@A1, @A2, @B1, @B2, @C1, @C2, @D1, @D2) ; # holds the indices for grouping
    &count_parentheses ($line) ;
+   #our (@A1, @A2, @B1, @B2, @C1, @C2, @D1, @D2) = ((), (), (), (), (), (), (), ()); # holds the indices for grouping
+   
    ## the following fails
    #(@A1, @A2, @B1, @B2, @C1, @C2, @D1, @D2) = &count_parentheses ($line, @A1, @A2, @B1, @B2, @C1, @C2, @D1, @D2) ;
    ## check result
    if ( $args{debug} ) {
-      printf "# A1 indices: %s\n", join(",", @A1) ;
-      printf "# A2 indices: %s\n", join(",", @A2) ;
-      printf "# B1 indices: %s\n", join(",", @B1) ;
-      printf "# B2 indices: %s\n", join(",", @B2) ;
-      printf "# C1 indices: %s\n", join(",", @C1) ;
-      printf "# C2 indices: %s\n", join(",", @C2) ;
-      printf "# D1 indices: %s\n", join(",", @D1) ;
-      printf "# D2 indices: %s\n", join(",", @D2) ;
+      printf "# A1 indices: %s\n", join(",", @main::A1) ;
+      printf "# A2 indices: %s\n", join(",", @main::A2) ;
+      printf "# B1 indices: %s\n", join(",", @main::B1) ;
+      printf "# B2 indices: %s\n", join(",", @main::B2) ;
+      printf "# C1 indices: %s\n", join(",", @main::C1) ;
+      printf "# C2 indices: %s\n", join(",", @main::C2) ;
+      printf "# D1 indices: %s\n", join(",", @main::D1) ;
+      printf "# D2 indices: %s\n", join(",", @main::D2) ;
    }
    ## generate parses
    ##our @pool = [ ] ; # this caused a big mess
    #our @pool = ( ) ;
    ## process A grouping
-   if ( scalar @A1 > 0 && (scalar @A1 == scalar @A2) ) {
+   if ( scalar @main::A1 > 0 && (scalar @main::A1 == scalar @main::A2) ) {
       if ( $args{onlyB} || $args{onlyC} || $args{onlyD} ) {
          # do nothing
       } else {
-         printf "# A components found with matching %d pair(s) of $Aopener and $Acloser\n", scalar @A1 ;
+         printf "# A components found with matching %d pair(s) of $Aopener and $Acloser\n", scalar @main::A1 ;
          &parse($line, $Aopener, $Acloser) ;
       }
    } else {
       printf "# A components not found: $Aopener and $Acloser missing or mismatching\n" }
    ## process B grouping
-   if ( scalar @B1 > 0 && (scalar @B1 == scalar @B2) ) {
+   if ( scalar @main::B1 > 0 && (scalar @main::B1 == scalar @main::B2) ) {
       if ( $args{onlyA} || $args{onlyC} || $args{onlyD} ) {
          # do nothing
       } else {
-         printf "# B components found with matching %d pair(s) of $Bopener and $Bcloser\n", scalar(@B1) ;
+         printf "# B components found with matching %d pair(s) of $Bopener and $Bcloser\n", scalar(@main::B1) ;
          &parse($line, $Bopener, $Bcloser) ;
       }
    } else {
       printf "# B components not found: $Bopener and $Bcloser missing or mismatching\n" }
    ## process C grouping
-   if ( scalar @C1 > 0 && ( scalar @C1 == scalar @C2 ) ) {
+   if ( scalar @main::C1 > 0 && ( scalar @main::C1 == scalar @main::C2 ) ) {
       if ( $args{onlyA} || $args{onlyB} || $args{onlyD} ) {
          # do nothing
       } else {
-         printf "# C components found with matching %d pair(s) of $Copener and $Ccloser\n", scalar @C1 ;
+         printf "# C components found with matching %d pair(s) of $Copener and $Ccloser\n", scalar @main::C1 ;
          &parse($line, $Copener, $Ccloser) ;
       }
    } else {
       printf "# C components not found: $Copener and $Ccloser missing or mismatching\n" }
    ## process D grouping
-   if ( scalar @D1 > 0 && (scalar @D1 == scalar @D2) ) {
+   if ( scalar @main::D1 > 0 && (scalar @main::D1 == scalar @main::D2) ) {
       if ( $args{onlyA} || $args{onlyB} || $args{onlyC} ) {
          # do nothing
       } else {
-         printf "# D components with matching %d pair(s) of $Dopener and $Dcloser\n", scalar @D1 ;
+         printf "# D components with matching %d pair(s) of $Dopener and $Dcloser\n", scalar @main::D1 ;
          &parse($line, $Dopener, $Dcloser) ;
       }
    } else {
@@ -300,14 +306,6 @@ sub process {
 sub count_parentheses {
    #
    my $linex = shift() ;
-   #my @A1x = shift() ;
-   #my @A2x = shift() ;
-   #my @B1x = shift() ;
-   #my @B2x = shift() ;
-   #my @C1x = shift() ;
-   #my @C2x = shift() ;
-   #my @D1x = shift() ;
-   #my @D2x = shift() ;
    #
    for my $i ( 0..length($linex) ) {
       if ( $args{debug} ) { printf "## i: $i\n" ; }
@@ -318,38 +316,38 @@ sub count_parentheses {
       if ( $char eq $Aopener ) {
          if ( $args{debug} ) { printf "# $Aopener match at: $i\n" ; }
          push(@main::A1, $i) ;
-         #push(@A1x, $i) ;
+         #push(@A1, $i) ;
       } elsif ( $char eq $Acloser ) {
          if ( $args{debug} ) { printf "# $Acloser match at: $i\n" ; }
          push(@main::A2, $i) ;
-         #push(@A2x, $i) ;
+         #push(@A2, $i) ;
       ## B
       } elsif ( $char eq $Bopener ) {
          if ( $args{debug} ) { printf "# $Bopener match at: $i\n" ; }
          push(@main::B1, $i) ;
-         #push(@B1x, $i) ;
+         #push(@B1, $i) ;
       } elsif ( $char eq $Bcloser ) {
          if ( $args{debug} ) { printf "# $Bcloser match at: $i\n" ; }
          push(@main::B2, $i) ;
-         #push(@B2x, $i) ;
+         #push(@B2, $i) ;
       ## C
       } elsif ( $char eq $Copener ) {
          if ($args{debug}) { printf "# $Copener match at: $i\n" ; }
          push(@main::C1, $i) ;
-         #push(@C1x, $i) ;
+         #push(@C1, $i) ;
       } elsif ( $char eq $Ccloser ) {
          if ( $args{debug} ) { printf "# $Ccloser match at: $i\n" ; }
          push(@main::C2, $i) ;
-         #push(@C2x, $i) ;
+         #push(@C2, $i) ;
       ## D
       } elsif ( $char eq $Dopener ) {
          if ($args{debug}) { printf "# $Dopener match at: $i\n" ; }
          push(@main::D1, $i) ;
-         #push(@D1x, $i) ;
+         #push(@D1, $i) ;
       } elsif ( $char eq $Dcloser ) {
          if ( $args{debug} ) { printf "# $Dcloser match at: $i\n" ; }
          push(@main::D2, $i) ;
-         #push(@D2x, $i) ;
+         #push(@D2, $i) ;
       }
    }
    ##
