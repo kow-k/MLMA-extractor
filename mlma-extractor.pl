@@ -94,7 +94,7 @@ while ( my $input = <> ) {
    ## process linkers
    my $nchar =  length ($input) ;
    my $nlinks = $nchar - length( $input =~ s/\Q$linker\E//rg );
-   if ( $args{debug} ) { print "# nlinks: $nlinks\n" ; }
+   print "# nlinks: $nlinks\n" if $args{debug} ;
    if ( $nlinks > 1 ) {
       my @expanded = &expand ($input) ;
       if ( $args{debug} ) {
@@ -102,13 +102,13 @@ while ( my $input = <> ) {
       }
       #
       $input =~ s/$linker//g ; # s///r turns out offensive
-      if ( $args{debug} ) { print "# clean_input: $input\n" ; }
+      print "# clean_input: $input\n" if $args{debug} ;
       push(@expanded, $input) ;
       # process
       $i = 0 ;
       for my $input ( @expanded ) {
          $i++ ;
-         if ( $args{debug} ) { print "# expanded input $i: $input\n" ; }
+         print "# expanded input $i: $input\n" if $args{debug} ;
          print "## cycle $i to handle discontinuity\n" ;
          &process ($input) ;
       }
