@@ -1,5 +1,9 @@
 # MLMA extractor (語構成の多重アノテーション解析)
 
+# Data
+
+1. [PMDA の見本と，それを基準にした MLMA と PSMA の性能比較](data-mlma-psma-compared-against-pdma.xlsx)
+
 # Script
 
 Multi-layered Morphological Analysis (MLMA) 記法の語構成要素アノテーションから語構成要素を抽出するための Perl script
