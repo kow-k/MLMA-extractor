@@ -71,11 +71,9 @@ my $count = 0 ;
 my $mode = "" ;
 ##
 while ( my $input = <> ) {
-   next if $input =~ m/^[#%].*/ ;
    chomp $input ;
-   next if length($input) == 0;
+   next if $input =~ m/^[#%].*/ || length($input) == 0 ;
    $count++ ;
-   #
    if ( $args{debug} ) {
       printf "## raw input $count: $input\n" ;
       printf "## length: %s\n", length($input) ;
@@ -322,53 +320,43 @@ sub count_parentheses {
       if ( $char eq $Aopener ) {
          if ( $args{debug} ) { printf "# $Aopener match at: $i\n" ; }
          push(@main::A1, $i) ;
-         #push(@A1, $i) ;
       } elsif ( $char eq $Acloser ) {
          if ( $args{debug} ) { printf "# $Acloser match at: $i\n" ; }
          push(@main::A2, $i) ;
-         #push(@A2, $i) ;
       ## B
       } elsif ( $char eq $Bopener ) {
          if ( $args{debug} ) { printf "# $Bopener match at: $i\n" ; }
          push(@main::B1, $i) ;
-         #push(@B1, $i) ;
       } elsif ( $char eq $Bcloser ) {
          if ( $args{debug} ) { printf "# $Bcloser match at: $i\n" ; }
          push(@main::B2, $i) ;
-         #push(@B2, $i) ;
       ## C
       } elsif ( $char eq $Copener ) {
          if ($args{debug}) { printf "# $Copener match at: $i\n" ; }
          push(@main::C1, $i) ;
-         #push(@C1, $i) ;
       } elsif ( $char eq $Ccloser ) {
          if ( $args{debug} ) { printf "# $Ccloser match at: $i\n" ; }
          push(@main::C2, $i) ;
-         #push(@C2, $i) ;
       ## D
       } elsif ( $char eq $Dopener ) {
          if ($args{debug}) { printf "# $Dopener match at: $i\n" ; }
          push(@main::D1, $i) ;
-         #push(@D1, $i) ;
       } elsif ( $char eq $Dcloser ) {
          if ( $args{debug} ) { printf "# $Dcloser match at: $i\n" ; }
          push(@main::D2, $i) ;
-         #push(@D2, $i) ;
       }
    }
-   ##
-   #return (@A1x, @A2x, @B1x, @B2x, @C1x, @C2x, @D1x, @D2x) ;
 }
 
 #
 sub parse {
    ## preparation
    my $string = shift() ;
-   if ( $args{debug} ) { printf "## string: $string\n" ; }
+   printf "## string: $string\n" if $args{debug} ;
    my $opener = shift() ;
-   if ( $args{debug} ) { printf "## opener: $opener\n" ; }
+   printf "## opener: $opener\n" if $args{debug} ;
    my $closer = shift() ;
-   if ( $args{debug} ) { printf "## closer: $closer\n" ; }
+   printf "## closer: $closer\n" if $args{debug} ;
    ## select mode
    if ( $opener eq $Aopener && $closer eq $Acloser ) {
       $mode = "a" ;
@@ -390,42 +378,30 @@ sub parse {
          my $start = pop(@S) ;
          my $len = ($position - $start) ;
          my $component = substr($string, $start, $len) ;
-         if ( $args{debug} ) {
-            printf "# raw component $mode$count: $component\n" ;
-         }
+         printf "# raw component $mode$count: $component\n" if $args{debug} ;
          ##
          if ( $args{gentle} ) {
-            #
             $component =~ s/[\[\]<>{}()]//g ; # removes openers and closers
-            if ( $args{debug} || $args{verbose} ) {
-               printf "# component $mode$count: $component\n" ;
-            }
+            printf "# component $mode$count: $component\n" if $args{debug} || $args{verbose} ;
             ## update @pool
-            push(@main::pool, $component) unless ( any { $_ eq $component } @main::pool );
-            push(@subpool, $component) unless ( any { $_ eq $component } @subpool );
-         #
+            push(@main::pool, $component) unless ( any { $_ eq $component } @main::pool ) ;
+            push(@subpool, $component) unless ( any { $_ eq $component } @subpool ) ;
          } else {
-            #
             my $subcount = 0 ;
             my $component_raw = $component ;
             $component =~ s/[\[\]<>{}()]//g ;
-            if ( $args{debug} || $args{verbose} ) {
-               printf "# component $mode$count.$subcount: $component\n" ;
-            }
+            printf "# component $mode$count.$subcount: $component\n" if $args{debug} || $args{verbose} ;
             ## update @pool
-            push(@main::pool, $component) unless ( any { $_ eq $component } @main::pool );
-            push(@subpool, $component) unless ( any { $_ eq $component } @subpool );
+            push(@main::pool, $component) unless ( any { $_ eq $component } @main::pool ) ;
+            push(@subpool, $component) unless ( any { $_ eq $component } @subpool ) ;
             ## parse subcomponents
             for my $subcomp (split(/[\[\]<>{}()]+/, $component_raw)) {
                if ( length($subcomp) > 0 ) {
-                  #if ( any(@pool) eq $subcomp ) { # fails to work
                   if ( any {$_ eq $subcomp } @main::pool) {
                      # do nothing
                   } else {
                      $subcount++ ;
-                     if ($args{debug} || $args{verbose}) {
-                        printf "# subcomponent $mode$count.$subcount: $subcomp\n" ;
-                     }
+                     printf "# subcomponent $mode$count.$subcount: $subcomp\n" if $args{debug} || $args{verbose} ;
                      ## update @pool
                      push(@main::pool, $subcomp) unless ( any { $_ eq $subcomp } @main::pool ) ;
                      push(@subpool, $subcomp) ;
@@ -436,7 +412,7 @@ sub parse {
       } elsif ( $char eq $opener ) {
          push(@S, int($position)) ;
       } else {
-         if ( $args{debug} ) { printf "# char: $char\n" ; }
+         printf "# char: $char\n" if $args{debug} ;
       }
       $position++ ;
    }
