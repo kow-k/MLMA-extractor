@@ -136,7 +136,9 @@ sub expand {
    #
    my @sublines = split ($linker , $line) ;
    if ($args{debug}) {
-      for my $subline (@sublines) { print "# subline: $subline\n" ; }
+      for my $subline (@sublines) {
+         print "# subline: $subline\n" ;
+      }
    }
    ##
    my $max = scalar @sublines ;
@@ -265,7 +267,8 @@ sub process {
       if ( $args{onlyB} || $args{onlyC} || $args{onlyD} ) {
          # do nothing
       } else {
-         printf "# A components found with matching %d pair(s) of $Aopener and $Acloser\n", scalar @main::A1 ;
+         printf "# A components found with matching %d pair(s) of $Aopener and $Acloser\n",
+            scalar @main::A1 ;
          &parse($line, $Aopener, $Acloser) ;
       }
    } else {
@@ -275,7 +278,8 @@ sub process {
       if ( $args{onlyA} || $args{onlyC} || $args{onlyD} ) {
          # do nothing
       } else {
-         printf "# B components found with matching %d pair(s) of $Bopener and $Bcloser\n", scalar(@main::B1) ;
+         printf "# B components found with matching %d pair(s) of $Bopener and $Bcloser\n",
+            scalar(@main::B1) ;
          &parse($line, $Bopener, $Bcloser) ;
       }
    } else {
@@ -285,7 +289,8 @@ sub process {
       if ( $args{onlyA} || $args{onlyB} || $args{onlyD} ) {
          # do nothing
       } else {
-         printf "# C components found with matching %d pair(s) of $Copener and $Ccloser\n", scalar @main::C1 ;
+         printf "# C components found with matching %d pair(s) of $Copener and $Ccloser\n",
+            scalar @main::C1 ;
          &parse($line, $Copener, $Ccloser) ;
       }
    } else {
@@ -295,7 +300,8 @@ sub process {
       if ( $args{onlyA} || $args{onlyB} || $args{onlyC} ) {
          # do nothing
       } else {
-         printf "# D components with matching %d pair(s) of $Dopener and $Dcloser\n", scalar @main::D1 ;
+         printf "# D components with matching %d pair(s) of $Dopener and $Dcloser\n",
+            scalar @main::D1 ;
          &parse($line, $Dopener, $Dcloser) ;
       }
    } else {
