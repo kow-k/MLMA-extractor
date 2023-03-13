@@ -15,6 +15,7 @@
 # 2023/01/16; change greedy to default behavior, adding switch by gentle;
 # 2023/01/18; implemented discontinuity marked by ~ in which A~B~C yields AC as well
 # 2023/02/07; fixed a bug in @A1, @A2, ... that resulted in overcounting
+# 2023/03/13; made slight modifications
 #
 # This Perl script takes a file and performes dual-mode parsing linewise where
 # each line is parsed for components between group opener and closer.
@@ -52,6 +53,9 @@ GetOptions(\%args,
 );
 print_help() if $args{help} ;
 
+## handle implications
+if ($args{verbose}) { $args{debug} = 1 ; }
+
 ## variables
 my $i ;                # counter
 my $Aopener = "[" ;   # opener of a phrase in A mode
@@ -72,7 +76,7 @@ my $mode = "" ;
 ##
 while ( my $input = <> ) {
    chomp $input ;
-   next if $input =~ m/^[#%].*/ || length($input) == 0 ;
+   next if $input =~ m/^[#%].*/ and length($input) == 0 ;
    $count++ ;
    if ( $args{debug} ) {
       printf "## raw input $count: $input\n" ;
@@ -262,7 +266,7 @@ sub process {
    #our @pool = ( ) ;
    ## process A grouping
    if ( scalar @main::A1 > 0 && (scalar @main::A1 == scalar @main::A2) ) {
-      if ( $args{onlyB} || $args{onlyC} || $args{onlyD} ) {
+      if ( $args{onlyB} and $args{onlyC} and $args{onlyD} ) {
          # do nothing
       } else {
          printf "# A components found with matching %d pair(s) of $Aopener and $Acloser\n",
@@ -273,7 +277,7 @@ sub process {
       printf "# A components not found: $Aopener and $Acloser missing or mismatching\n" }
    ## process B grouping
    if ( scalar @main::B1 > 0 && (scalar @main::B1 == scalar @main::B2) ) {
-      if ( $args{onlyA} || $args{onlyC} || $args{onlyD} ) {
+      if ( $args{onlyA} and $args{onlyC} and $args{onlyD} ) {
          # do nothing
       } else {
          printf "# B components found with matching %d pair(s) of $Bopener and $Bcloser\n",
@@ -284,7 +288,7 @@ sub process {
       printf "# B components not found: $Bopener and $Bcloser missing or mismatching\n" }
    ## process C grouping
    if ( scalar @main::C1 > 0 && ( scalar @main::C1 == scalar @main::C2 ) ) {
-      if ( $args{onlyA} || $args{onlyB} || $args{onlyD} ) {
+      if ( $args{onlyA} and $args{onlyB} and $args{onlyD} ) {
          # do nothing
       } else {
          printf "# C components found with matching %d pair(s) of $Copener and $Ccloser\n",
@@ -295,7 +299,7 @@ sub process {
       printf "# C components not found: $Copener and $Ccloser missing or mismatching\n" }
    ## process D grouping
    if ( scalar @main::D1 > 0 && (scalar @main::D1 == scalar @main::D2) ) {
-      if ( $args{onlyA} || $args{onlyB} || $args{onlyC} ) {
+      if ( $args{onlyA} and $args{onlyB} and $args{onlyC} ) {
          # do nothing
       } else {
          printf "# D components with matching %d pair(s) of $Dopener and $Dcloser\n",
@@ -382,7 +386,7 @@ sub parse {
          ##
          if ( $args{gentle} ) {
             $component =~ s/[\[\]<>{}()]//g ; # removes openers and closers
-            printf "# component $mode$count: $component\n" if $args{debug} || $args{verbose} ;
+            printf "# component $mode$count: $component\n" if $args{verbose} ;
             ## update @pool
             push(@main::pool, $component) unless ( any { $_ eq $component } @main::pool ) ;
             push(@subpool, $component) unless ( any { $_ eq $component } @subpool ) ;
@@ -390,7 +394,7 @@ sub parse {
             my $subcount = 0 ;
             my $component_raw = $component ;
             $component =~ s/[\[\]<>{}()]//g ;
-            printf "# component $mode$count.$subcount: $component\n" if $args{debug} || $args{verbose} ;
+            printf "# component $mode$count.$subcount: $component\n" if $args{verbose} ;
             ## update @pool
             push(@main::pool, $component) unless ( any { $_ eq $component } @main::pool ) ;
             push(@subpool, $component) unless ( any { $_ eq $component } @subpool ) ;
@@ -401,7 +405,7 @@ sub parse {
                      # do nothing
                   } else {
                      $subcount++ ;
-                     printf "# subcomponent $mode$count.$subcount: $subcomp\n" if $args{debug} || $args{verbose} ;
+                     printf "# subcomponent $mode$count.$subcount: $subcomp\n" if $args{verbose} ;
                      ## update @pool
                      push(@main::pool, $subcomp) unless ( any { $_ eq $subcomp } @main::pool ) ;
                      push(@subpool, $subcomp) ;
