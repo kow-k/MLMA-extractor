@@ -83,3 +83,11 @@ item 11 has component  1: 室
 item 11 has component  2: 治療室
 item 11 has component  3: 集中治療室
 ```
+
+## 構成素要素の抜き出し
+
+mlma-extractor.pl の出力を OUT.txt とし，次のコードを実行:
+
+```
+cat OUT.txt | grep -E 'item|=' | perl -pe 's/item.+has.+component.+:([^\n]+)\n/$1/g' | perl -pe 's/=+//'
+```
