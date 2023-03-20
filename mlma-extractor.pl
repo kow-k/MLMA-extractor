@@ -1,5 +1,5 @@
 #!/usr/bin/env perl -w
-
+#
 # developed by Kow Kuroda
 # contact: kow.kuroda@gmail.com
 # created on 2022/12/11
@@ -16,6 +16,7 @@
 # 2023/01/18; implemented discontinuity marked by ~ in which A~B~C yields AC as well
 # 2023/02/07; fixed a bug in @A1, @A2, ... that resulted in overcounting
 # 2023/03/13; made slight modifications
+# 2023/03/14; fixed a bug in null line detection
 #
 # This Perl script takes a file and performes dual-mode parsing linewise where
 # each line is parsed for components between group opener and closer.
@@ -76,7 +77,7 @@ my $mode = "" ;
 ##
 while ( my $input = <> ) {
    chomp $input ;
-   next if $input =~ m/^[#%].*/ and length($input) == 0 ;
+   next if $input =~ m/^[#%].*/ or length($input) == 0 ;
    $count++ ;
    if ( $args{debug} ) {
       printf "## raw input $count: $input\n" ;
