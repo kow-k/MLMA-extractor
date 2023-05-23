@@ -17,6 +17,7 @@
 # 2023/02/07; fixed a bug in @A1, @A2, ... that resulted in overcounting
 # 2023/03/13; made slight modifications
 # 2023/03/14; fixed a bug in null line detection
+# 2023/05/23; fixed a bug at handling ~ to produce unbalanced match at A
 #
 # This Perl script takes a file and performes dual-mode parsing linewise where
 # each line is parsed for components between group opener and closer.
@@ -74,6 +75,7 @@ my $itembreak = "=========================\n" ;
 ### main
 my $count = 0 ;
 my $mode = "" ;
+my $padding = 2 ;
 ##
 while ( my $input = <> ) {
    chomp $input ;
@@ -101,7 +103,7 @@ while ( my $input = <> ) {
    my $nlinks = $nchar - length( $input =~ s/\Q$linker\E//rg );
    print "# nlinks: $nlinks\n" if $args{debug} ;
    if ( $nlinks > 1 ) {
-      my @expanded = &expand ($input) ;
+      my @expanded = &expand_input ($input) ;
       if ( $args{debug} ) {
          for my $added (@expanded) { print "# added: $added\n" ; }
       }
@@ -134,19 +136,18 @@ while ( my $input = <> ) {
 }
 
 #
-sub expand {
+sub expand_input {
    my $line = shift() ;
    #
    my @sublines = split ($linker , $line) ;
-   if ($args{debug}) {
-      for my $subline (@sublines) {
-         print "# subline: $subline\n" ;
-      }
+   if ( $args{debug} ) {
+      print "# sublines: ", join "/ ", @sublines, "\n" ;
+      #for my $subline (@sublines) { print "# subline: $subline\n" ; }
    }
    ##
-   my $max = scalar @sublines ;
+   my $subline_count = scalar @sublines ;
    my @expanded = () ;
-   for my $p ( 0..$max ) {
+   for my $p ( 0..$subline_count ) {
       my $unit1 = $sublines[$p] ;
       my $unit2 = $sublines[$p + 2] ;
       if ( defined $unit2 ) {
@@ -155,6 +156,7 @@ sub expand {
             printf "# unit2: $unit2\n" ;
          }
          ## equate parentheses
+         ## count parentheses in unit 1
          my (@xA1, @xA2, @xB1, @xB2, @xC1, @xC2, @xD1, @xD2) ;
          $i = 0;
          for my $c ( split ("", $unit1) ) {
@@ -177,6 +179,7 @@ sub expand {
             }
             $i++ ;
          }
+         ## count parentheses in unit 2
          my (@yA1, @yA2, @yB1, @yB2, @yC1, @yC2, @yD1, @yD2) ;
          $i = 0;
          for my $c ( split ("", $unit2) ) {
@@ -199,10 +202,10 @@ sub expand {
             }
             $i++ ;
          }
-         #
+         ## adjust matched parentheses
          my $dA = ( @xA1 + @yA1 ) - ( @xA2 + @yA2 ) ;
          if ( $args{debug} ) { printf "# dA: %d\n", $dA ; }
-         if ( $dA > 0 ) {
+         if ( $dA >= 0 ) {
             for $i ( 0..($dA - 1) ) { $unit2 =~ s/\Q$Aopener// ; }
          } elsif ( $dA < 0 ) {
             for $i (0..(-$dA - 1) ) { $unit2 =~ s/\Q$Acloser// ; }
@@ -210,7 +213,7 @@ sub expand {
          #
          my $dB = ( @xB1 + @yB1 ) - ( @xB2 + @yB2 ) ;
          if ( $args{debug} ) { printf "# dB: %d\n", $dB ; }
-         if ( $dB > 0 ) {
+         if ( $dB >= 0 ) {
             for $i ( 0..($dB - 1) ) { $unit2 =~ s/\Q$Bopener// ; }
          } elsif ( $dB < 0 ) {
             for $i ( 0..(-$dB - 1) ) { $unit2 =~ s/\Q$Bcloser// ; }
@@ -218,15 +221,15 @@ sub expand {
          #
          my $dC = ( @xC1 + @yC1 ) - ( @xC2 + @yC2 ) ;
          if ( $args{debug} ) { printf "# dC: %d\n", $dC ; }
-         if ( $dC > 0 ) {
+         if ( $dC >= 0 ) {
             for $i ( 0..($dC - 1) ) { $unit2 =~ s/\Q$Copener// ; }
          } elsif ( $dC < 0 ) {
-            for $i ( 0..(-$dC - 1) ) { $unit2 =~ s/\Q$Bcloser// ; }
+            for $i ( 0..(-$dC - 1) ) { $unit2 =~ s/\Q$Ccloser// ; }
          }
          #
          my $dD = ( @xD1 + @yD1 ) - ( @xD2 + @yD2 ) ;
          if ( $args{debug} ) { printf "# dD: %d\n", $dD ; }
-         if ( $dD > 0 ) {
+         if ( $dD >= 0 ) {
             for $i ( 0..($dD - 1) ) { $unit2 =~ s/\Q$Dopener// ; }
          } elsif ( $dC < 0 ) {
             for $i ( 0..(-$dD - 1) ) { $unit2 =~ s/\Q$Dcloser// ; }
