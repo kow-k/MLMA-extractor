@@ -1,5 +1,10 @@
 # MLMA extractor (語構成の多重アノテーション解析)
 
+
+# Modifications
+
+1. "~" を使った不連続要素の認定で語末要素が脱落するバグを修正 [2023/05/23]
+
 # Data
 
 1. [PMDA の見本と，それを基準にした MLMA と PSMA の性能比較](data-mlma-psma-compared-against-pdma.xlsx)
@@ -58,7 +63,7 @@ Step 4:
 
 ## -regularize の効果
 
-デフォールトでは A ~ B ~ C の表記を使って，AC を不連続要素として認識するが，実装は quick and dirty なので，不自然な出力が得られる可能性大．-r(egularize) で入力中の ~ を無視した処理が可能．
+デフォールトでは A~B~C の表記を使って，ABC の他に AC を不連続要素として認識するが，実装は quick and dirty なので，不自然な出力が得られる可能性大．-r(egularize) で入力中の ~ を無視した処理が可能．
 
 ## -gentle の効果
 
