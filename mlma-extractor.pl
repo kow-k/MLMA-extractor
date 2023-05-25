@@ -18,6 +18,7 @@
 # 2023/03/13; made slight modifications
 # 2023/03/14; fixed a bug in null line detection
 # 2023/05/23; fixed a bug at handling ~ to produce unbalanced match at A
+# 2023/05/25; revised code partly
 #
 # This Perl script takes a file and performes dual-mode parsing linewise where
 # each line is parsed for components between group opener and closer.
@@ -74,16 +75,16 @@ my $itembreak = "=========================\n" ;
 
 ### main
 my $count = 0 ;
-my $mode = "" ;
+my $mode  = "" ;
 my $padding = 2 ;
 ##
 while ( my $input = <> ) {
    chomp $input ;
-   next if $input =~ m/^[#%].*/ or length($input) == 0 ;
+   next if $input =~ m/^[#%].*/ or length $input == 0 ;
    $count++ ;
    if ( $args{debug} ) {
       printf "## raw input $count: $input\n" ;
-      printf "## length: %s\n", length($input) ;
+      printf "## length: %s\n", length $input ;
    }
    # remove inline comments
    $input =~ s/([^#]+)#.*/$1/ ;
@@ -99,7 +100,7 @@ while ( my $input = <> ) {
    ## holds the indices for grouping
    our (@A1, @A2, @B1, @B2, @C1, @C2, @D1, @D2) ;
    ## process linkers
-   my $nchar =  length ($input) ;
+   my $nchar =  length $input ;
    my $nlinks = $nchar - length( $input =~ s/\Q$linker\E//rg );
    print "# nlinks: $nlinks\n" if $args{debug} ;
    if ( $nlinks > 1 ) {
@@ -151,93 +152,71 @@ sub expand_input {
       my $unit1 = $sublines[$p] ;
       my $unit2 = $sublines[$p + 2] ;
       if ( defined $unit2 ) {
-         if ( $args{debug} ) {
-            printf "# unit1: $unit1\n" ;
-            printf "# unit2: $unit2\n" ;
-         }
-         ## equate parentheses
-         ## count parentheses in unit 1
-         my (@xA1, @xA2, @xB1, @xB2, @xC1, @xC2, @xD1, @xD2) ;
+         if ( $args{debug} ) { printf "# unit1: $unit1\n# unit2: $unit2\n" ; }
+         ### equate parentheses
+         ## index openers and closers in unit 1
+         my ( @xA1, @xA2, @xB1, @xB2, @xC1, @xC2, @xD1, @xD2 ) ;
          $i = 0;
          for my $c ( split ("", $unit1) ) {
-            if ( $c eq $Aopener ) {
-               push (@xA1, $i) ;
-            } elsif ( $c eq $Acloser ) {
-               push (@xA2, $i) ;
-            } elsif ( $c eq $Bopener ) {
-               push (@xB1, $i) ;
-            } elsif ( $c eq $Bcloser ){
-               push (@xB2, $i) ;
-            } elsif ( $c eq $Copener ) {
-               push (@xC1, $i) ;
-            } elsif ( $c eq $Ccloser ) {
-               push (@xC2, $i) ;
-            } elsif ( $c eq $Dopener ){
-               push (@xD1, $i) ;
-            } elsif ( $c eq $Dcloser ) {
-               push (@xD2, $i) ;
-            }
+               if ( $c eq $Aopener ) { push (@xA1, $i) ; }
+            elsif ( $c eq $Acloser ) { push (@xA2, $i) ; }
+            elsif ( $c eq $Bopener ) { push (@xB1, $i) ; }
+            elsif ( $c eq $Bcloser ) { push (@xB2, $i) ; }
+            elsif ( $c eq $Copener ) { push (@xC1, $i) ; }
+            elsif ( $c eq $Ccloser ) { push (@xC2, $i) ; }
+            elsif ( $c eq $Dopener ) { push (@xD1, $i) ; }
+            elsif ( $c eq $Dcloser ) { push (@xD2, $i) ; }
             $i++ ;
          }
-         ## count parentheses in unit 2
+         ## index openers and closers in unit 2
          my (@yA1, @yA2, @yB1, @yB2, @yC1, @yC2, @yD1, @yD2) ;
          $i = 0;
          for my $c ( split ("", $unit2) ) {
-            if ( $c eq $Aopener ) {
-               push (@yA1, $i) ;
-            } elsif ( $c eq $Acloser ) {
-               push (@yA2, $i) ;
-            } elsif ( $c eq $Bopener ) {
-               push (@yB1, $i) ;
-            } elsif ( $c eq $Bcloser ){
-               push (@yB2, $i) ;
-            } elsif ( $c eq $Copener ) {
-               push (@yC1, $i) ;
-            } elsif ( $c eq $Ccloser ) {
-               push (@yC2, $i) ;
-            } elsif ( $c eq $Dopener ){
-               push (@yD1, $i) ;
-            } elsif ( $c eq $Dcloser ) {
-               push (@yD2, $i) ;
-            }
+              if ( $c eq $Aopener ) { push (@yA1, $i) ; }
+            elsif ( $c eq $Acloser ) { push (@yA2, $i) ; }
+            elsif ( $c eq $Bopener ) { push (@yB1, $i) ; }
+            elsif ( $c eq $Bcloser ) { push (@yB2, $i) ; }
+            elsif ( $c eq $Copener ) { push (@yC1, $i) ; }
+            elsif ( $c eq $Ccloser ) { push (@yC2, $i) ; }
+            elsif ( $c eq $Dopener ) { push (@yD1, $i) ; }
+            elsif ( $c eq $Dcloser ) { push (@yD2, $i) ; }
             $i++ ;
          }
-         ## adjust matched parentheses
-         my $dA = ( @xA1 + @yA1 ) - ( @xA2 + @yA2 ) ;
-         if ( $args{debug} ) { printf "# dA: %d\n", $dA ; }
-         if ( $dA >= 0 ) {
-            for $i ( 0..($dA - 1) ) { $unit2 =~ s/\Q$Aopener// ; }
-         } elsif ( $dA < 0 ) {
-            for $i (0..(-$dA - 1) ) { $unit2 =~ s/\Q$Acloser// ; }
+         ## get A-discrepancy
+         my $disA = ( @xA1 + @yA1 ) - ( @xA2 + @yA2 ) ;
+         if ( $args{debug} ) { printf "# disA: %d\n", $disA ; }
+         if ( $disA >= 0 ) {
+            for $i ( 0 .. ($disA - 1) ) { $unit2 =~ s/\Q$Aopener// ; }
+         } elsif ( $disA < 0 ) {
+            for $i (0 .. (-$disA - 1) ) { $unit2 =~ s/\Q$Acloser// ; }
          }
-         #
-         my $dB = ( @xB1 + @yB1 ) - ( @xB2 + @yB2 ) ;
-         if ( $args{debug} ) { printf "# dB: %d\n", $dB ; }
-         if ( $dB >= 0 ) {
-            for $i ( 0..($dB - 1) ) { $unit2 =~ s/\Q$Bopener// ; }
-         } elsif ( $dB < 0 ) {
-            for $i ( 0..(-$dB - 1) ) { $unit2 =~ s/\Q$Bcloser// ; }
+         ## get B-discrepancy
+         my $disB = ( @xB1 + @yB1 ) - ( @xB2 + @yB2 ) ;
+         if ( $args{debug} ) { printf "# disB: %d\n", $disB ; }
+         if ( $disB >= 0 ) {
+            for $i ( 0 .. ($disB - 1) ) { $unit2 =~ s/\Q$Bopener// ; }
+         } elsif ( $disB < 0 ) {
+            for $i ( 0 .. (-$disB - 1) ) { $unit2 =~ s/\Q$Bcloser// ; }
          }
-         #
-         my $dC = ( @xC1 + @yC1 ) - ( @xC2 + @yC2 ) ;
-         if ( $args{debug} ) { printf "# dC: %d\n", $dC ; }
-         if ( $dC >= 0 ) {
-            for $i ( 0..($dC - 1) ) { $unit2 =~ s/\Q$Copener// ; }
-         } elsif ( $dC < 0 ) {
-            for $i ( 0..(-$dC - 1) ) { $unit2 =~ s/\Q$Ccloser// ; }
+         ## get C-discrepancy
+         my $disC = ( @xC1 + @yC1 ) - ( @xC2 + @yC2 ) ;
+         if ( $args{debug} ) { printf "# disC: %d\n", $disC ; }
+         if ( $disC >= 0 ) {
+            for $i ( 0 .. ($disC - 1) ) { $unit2 =~ s/\Q$Copener// ; }
+         } elsif ( $disC < 0 ) {
+            for $i ( 0 .. (-$disC - 1) ) { $unit2 =~ s/\Q$Ccloser// ; }
          }
-         #
-         my $dD = ( @xD1 + @yD1 ) - ( @xD2 + @yD2 ) ;
-         if ( $args{debug} ) { printf "# dD: %d\n", $dD ; }
-         if ( $dD >= 0 ) {
-            for $i ( 0..($dD - 1) ) { $unit2 =~ s/\Q$Dopener// ; }
-         } elsif ( $dC < 0 ) {
-            for $i ( 0..(-$dD - 1) ) { $unit2 =~ s/\Q$Dcloser// ; }
+         ## get D-discrepancy
+         my $disD = ( @xD1 + @yD1 ) - ( @xD2 + @yD2 ) ;
+         if ( $args{debug} ) { printf "# disD: %d\n", $disD ; }
+         if ( $disD >= 0 ) {
+            for $i ( 0 .. ($disD - 1) ) { $unit2 =~ s/\Q$Dopener// ; }
+         } elsif ( $disD < 0 ) {
+            for $i ( 0 .. (-$disD - 1) ) { $unit2 =~ s/\Q$Dcloser// ; }
          }
          ## add handling of mismatched parentheses here
-         #
          my $combined = $unit1 . $unit2 ;
-         if ( length($combined) > length($unit1) ) {
+         if ( length $combined > length $unit1 ) {
             push (@expanded, $combined) unless ( any { $_ eq $combined } @expanded ) ;
          }
       }
@@ -286,7 +265,7 @@ sub process {
       } else {
          printf "# B components found with matching %d pair(s) of $Bopener and $Bcloser\n",
             scalar(@main::B1) ;
-         &parse($line, $Bopener, $Bcloser) ;
+         &parse ($line, $Bopener, $Bcloser) ;
       }
    } else {
       printf "# B components not found: $Bopener and $Bcloser missing or mismatching\n" }
@@ -297,7 +276,7 @@ sub process {
       } else {
          printf "# C components found with matching %d pair(s) of $Copener and $Ccloser\n",
             scalar @main::C1 ;
-         &parse($line, $Copener, $Ccloser) ;
+         &parse ($line, $Copener, $Ccloser) ;
       }
    } else {
       printf "# C components not found: $Copener and $Ccloser missing or mismatching\n" }
@@ -308,7 +287,7 @@ sub process {
       } else {
          printf "# D components with matching %d pair(s) of $Dopener and $Dcloser\n",
             scalar @main::D1 ;
-         &parse($line, $Dopener, $Dcloser) ;
+         &parse ($line, $Dopener, $Dcloser) ;
       }
    } else {
       printf "# D components not found: $Dopener and $Dcloser missing or mismatching\n" }
@@ -319,7 +298,7 @@ sub count_parentheses {
    #
    my $linex = shift() ;
    #
-   for my $i ( 0..length($linex) ) {
+   for my $i ( 0..length $linex ) {
       if ( $args{debug} ) { printf "## i: $i\n" ; }
       my $char = substr($linex, $i, 1) ;
       if ( $args{debug} ) { printf "## char: $char\n" ; }
@@ -330,28 +309,28 @@ sub count_parentheses {
          push(@main::A1, $i) ;
       } elsif ( $char eq $Acloser ) {
          if ( $args{debug} ) { printf "# $Acloser match at: $i\n" ; }
-         push(@main::A2, $i) ;
+         push (@main::A2, $i) ;
       ## B
       } elsif ( $char eq $Bopener ) {
          if ( $args{debug} ) { printf "# $Bopener match at: $i\n" ; }
          push(@main::B1, $i) ;
       } elsif ( $char eq $Bcloser ) {
          if ( $args{debug} ) { printf "# $Bcloser match at: $i\n" ; }
-         push(@main::B2, $i) ;
+         push (@main::B2, $i) ;
       ## C
       } elsif ( $char eq $Copener ) {
          if ($args{debug}) { printf "# $Copener match at: $i\n" ; }
          push(@main::C1, $i) ;
       } elsif ( $char eq $Ccloser ) {
          if ( $args{debug} ) { printf "# $Ccloser match at: $i\n" ; }
-         push(@main::C2, $i) ;
+         push (@main::C2, $i) ;
       ## D
       } elsif ( $char eq $Dopener ) {
          if ($args{debug}) { printf "# $Dopener match at: $i\n" ; }
-         push(@main::D1, $i) ;
+         push (@main::D1, $i) ;
       } elsif ( $char eq $Dcloser ) {
          if ( $args{debug} ) { printf "# $Dcloser match at: $i\n" ; }
-         push(@main::D2, $i) ;
+         push (@main::D2, $i) ;
       }
    }
 }
@@ -404,7 +383,7 @@ sub parse {
             push(@subpool, $component) unless ( any { $_ eq $component } @subpool ) ;
             ## parse subcomponents
             for my $subcomp (split(/[\[\]<>{}()]+/, $component_raw)) {
-               if ( length($subcomp) > 0 ) {
+               if ( length $subcomp > 0 ) {
                   if ( any {$_ eq $subcomp } @main::pool) {
                      # do nothing
                   } else {
@@ -429,6 +408,14 @@ sub parse {
       printf "# dump(sort \@subpool):\n" ;
       &encoded_dump(sort \@subpool) ;
    }
+}
+
+#
+sub count_char {
+   my $char = shift() ;
+   my $original = shift() ;
+   my $converted = $original =~ s/$char//g ;
+   return length $original - length $converted ;
 }
 
 #
