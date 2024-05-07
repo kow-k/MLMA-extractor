@@ -1,5 +1,8 @@
 # MLMA extractor (語構成の多重アノテーション解析)
 
+# Papers
+
+1. [要素の重複と不連続性を扱える抽出型の語構成要素解析 (黒田+)](https://www.anlp.jp/proceedings/annual_meeting/2023/pdf_dir/P3-13.pdf)
 
 # Modifications
 
